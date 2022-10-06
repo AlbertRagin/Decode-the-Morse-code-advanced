@@ -1,0 +1,325 @@
+In this kata you have to write a Morse code decoder for wired electrical telegraph.
+Electric telegraph is operated on a 2-wire line with a key that, when pressed, connects the wires together, which can be detected on a remote station. The Morse code encodes every character being transmitted as a sequence of "dots" (short presses on the key) and "dashes" (long presses on the key).
+
+When transmitting the Morse code, the international standard specifies that:
+
+"Dot" – is 1 time unit long.
+"Dash" – is 3 time units long.
+Pause between dots and dashes in a character – is 1 time unit long.
+Pause between characters inside a word – is 3 time units long.
+Pause between words – is 7 time units long.
+However, the standard does not specify how long that "time unit" is. And in fact different operators would transmit at different speed. An amateur person may need a few seconds to transmit a single character, a skilled professional can transmit 60 words per minute, and robotic transmitters may go way faster.
+
+For this kata we assume the message receiving is performed automatically by the hardware that checks the line periodically, and if the line is connected (the key at the remote station is down), 1 is recorded, and if the line is not connected (remote key is up), 0 is recorded. After the message is fully received, it gets to you for decoding as a string containing only symbols 0 and 1.
+
+For example, the message HEY JUDE, that is ···· · −·−−   ·−−− ··− −·· · may be received as follows:
+
+1100110011001100000011000000111111001100111111001111110000000000000011001111110011111100111111000000110011001111110000001111110011001100000011
+
+As you may see, this transmission is perfectly accurate according to the standard, and the hardware sampled the line exactly two times per "dot".
+
+That said, your task is to implement two functions:
+
+Function decodeBits(bits), that should find out the transmission rate of the message, correctly decode the message to dots ., dashes - and spaces (one between characters, three between words) and return those as a string. Note that some extra 0's may naturally occur at the beginning and the end of a message, make sure to ignore them. Also if you have trouble discerning if the particular sequence of 1's is a dot or a dash, assume it's a dot.
+2. Function decodeMorse(morseCode), that would take the output of the previous function and return a human-readable string.
+
+NOTE: For coding purposes you have to use ASCII characters . and -, not Unicode characters.
+
+The Morse code table is preloaded for you (see the solution setup, to get its identifier in your language).
+
+
+Eg:
+  morseCodes(".--") //to access the morse translation of ".--"
+All the test strings would be valid to the point that they could be reliably decoded as described above, so you may skip checking for errors and exceptions, just do your best in figuring out what the message is!
+
+
+
+function decodeBits(bits) {
+  // Trim zeros
+  bits = bits.replace(/(^0+|0+$)/g, '')
+  
+  // Find transmission rate
+  var rate = Math.min.apply(null, bits.match(/0+|1+/g).map(function(b) { return b.length }))
+  
+  // Convert to morse code
+  bits = bits
+    .replace(new RegExp('(?:111){' + rate + '}(?:0{' + rate + '}|$)', 'g'), '-')
+    .replace(new RegExp('1{' + rate + '}(?:0{' + rate + '}|$)', 'g'), '.')
+    .replace(new RegExp('(?:000000){' + rate + '}', 'g'), '   ')
+    .replace(new RegExp('(?:00){' + rate + '}', 'g'), ' ')
+  
+  return bits
+}
+
+function decodeMorse(message) {
+  return message
+    .replace(/   /g, ' _ ')
+    .split(' ')
+    .map(function(letter) { return letter === '_' ? ' ' : MORSE_CODE[letter] })
+    .join('')
+}
+2 similar code variations are grouped with this one
+Show Variations
+Best Practices53Clever94
+ 2ForkCompare with your solutionLink
+Dekree, 15237565150, unnamed_army, mazsola39
+var decodeBits = function( bits ) {
+  bits = bits.replace( /(^0+|0+$)/g, '' );
+  let timeUnit = Math.min.apply( null, bits.match( /0+|1+/g ).map( item => item.length ) );
+  
+  return bits
+    .replace( new RegExp( '0'.repeat( 7 * timeUnit ), 'g' ), '   ' )
+    .replace( new RegExp( '0'.repeat( 3 * timeUnit ), 'g' ), ' ' )
+    .replace( new RegExp( '1'.repeat( 3 * timeUnit ), 'g' ), '-' )
+    .replace( new RegExp( '1'.repeat( 1 * timeUnit ), 'g' ), '.' )
+    .replace( new RegExp( '0'.repeat( 1 * timeUnit ), 'g' ), '' );
+};
+
+var decodeMorse = function(morseCode){
+    return morseCode.trim().split( '   ' )
+      .reduce( ( res, word ) => res + ' ' + word.split( ' ' ).reduce( ( word, letter ) => word + MORSE_CODE[ letter ], '' ), '' )
+      .trim();
+};
+1 similar code variation is grouped with this one
+Show Variations
+Best Practices28Clever24
+ 1ForkCompare with your solutionLink
+mayavera
+function decodeBits (bits) {
+  let codes = bits
+    .replace(/^0+/, '')
+    .replace(/0+$/, '')
+    .match(/(0+|1+)/g)
+  
+  let counts = codes.map((e) => { return e.length })
+  let min = Math.min(...counts)
+  
+  return codes
+    .map((code) => {
+      switch (code.slice(0, code.length / min)) {
+        case '0'      : return ''
+        case '1'      : return '.'
+        case '111'    : return '-'
+        case '000'    : return ' '
+        case '0000000': return '   '
+      }
+    }).join('')
+}
+
+function decodeMorse (morse) {
+  return morse.replace(/ ?[.-]+ ?/g, (e) => {
+    return MORSE_CODE[e.trim()]
+  }).trim()
+}
+Best Practices11Clever18
+ 5ForkCompare with your solutionLink
+maipatana, skinnyskinny
+var decodeBits = function(bits){
+  message = bits.replace(/^0+|0+$/g,"").match(/0+|1+/g);
+  tu = Math.min(...message.map(x=>x.length));
+  mose = message.map(x=> x=="1".repeat(tu) ? ".": x=="111".repeat(tu) ? "-" : x=="0".repeat(tu) ? "" : x=="000".repeat(tu) ? " " : x=="0000000".repeat(tu) ? "  " : "").join("");
+  return mose;
+}
+var decodeMorse = function(morseCode){
+  return morseCode.split(" ").map(x=> x=="" ? " " : MORSE_CODE[x]).join("").trim();
+}
+Best Practices5Clever12
+ 0ForkCompare with your solutionLink
+ChiefAffirmationOfficer
+function decodeBits (bits) {
+    const createSubstitutionRule = ({bit, length, token}) => {
+        return [ new RegExp(`${ bit }{${ length }}`, 'g'), token ]
+    }
+
+    const rules = [
+        [ 'Replace bit 0(x7) with word spacer', createSubstitutionRule({ bit: 0, length: 7, token: '   ' }) ],
+        [ 'Replace bit 0(x3) with char spacer', createSubstitutionRule({ bit: 0, length: 3, token: ' ' }) ],
+        [ 'Replace bit 1(x3) with dash', createSubstitutionRule({ bit: 1, length: 3, token: '-' }) ],
+        [ 'Replace bit 1(x1) with dot', createSubstitutionRule({ bit: 1, length: 1, token: '.' }) ],
+        [ 'Remove remaining 0(x1) bits', createSubstitutionRule({ bit: 0, length: 1, token: '' }) ],
+    ]
+
+    return rules.reduce((output, [, rule]) => output.replace(...rule), compactBitstring(bits))
+}
+
+function compactBitstring (bits) {
+    const trimZeroes = bits => bits.replace(/^0*(.+?)0*$/, '$1')
+    const byRate = bits => new RegExp(`([01]){${ getRate(bits) }}`, 'g')
+    const getRate = bits => Math.min(...bits.match(/0+|1+/g).map(({length}) => length))
+
+    const bitstring = trimZeroes(bits)
+    return bitstring.replace(byRate(bitstring), '$1')
+}
+
+function decodeMorse (code) {
+    const morseChar = /([.-]+?)(\s+|$)/g
+    const withTranslatedChar = (_, char, space) => MORSE_CODE[char].padEnd(space.length - 1)
+
+    return code.trim().replace(morseChar, withTranslatedChar)
+}
+Best Practices5Clever1
+ 3ForkCompare with your solutionLink
+0lexa, kevinBell
+const decodeBits = bits => {
+  const arr = bits.replace(/^0+|0+$/g, ``).match(/0+|1+/g);
+  const unit = Math.min(...arr.map(val => val.length));
+  return arr.map(val => val === `0`.repeat(7 * unit) ? `_` : val === `0`.repeat(3 * unit) ? ` ` : val === `1`.repeat(3 * unit) ? `-` : val === `1`.repeat(unit) ? `.` : ``).join(``);
+};
+
+const decodeMorse = morseCode =>
+  morseCode.replace(/[.-]+/g, val => MORSE_CODE[val]).replace(/\s/g, ``).replace(/_/g, ` `);
+Best Practices4Clever1
+ 0ForkCompare with your solutionLink
+isqua
+var compact = function(str) {
+  const arr = str.match(/(0+|1+)/g);
+  const min = arr.reduce((p, c) => Math.min(p, c.length), str.length);
+  
+  return arr.map(s => s.slice(0, s.length / min)).join('');
+};
+
+var decodeBits = function(bits) {
+  // ToDo: Accept 0's and 1's, return dots, dashes and spaces
+  return compact(
+      (bits || '').replace(/(^0+|0+$)/g, '')
+    )
+    .replace(/111(0|$)/g, '-')
+    .replace(/1(0|$)/g, '.')
+    .replace(/0/g, ' ');
+}
+
+var decodeMorse = function(morseCode){
+  // ToDo: Accept dots, dashes and spaces, return human-readable message
+   return morseCode
+    .split('   ')
+    .map(word => {
+      return word
+        .split(' ')
+        .map(char => { return MORSE_CODE[char]; })
+        .join('');
+    })
+    .filter(Boolean)
+    .join(' ');
+};
+Best Practices4Clever0
+ 0ForkCompare with your solutionLink
+jstejada, MaximillianVoss, ethanhan2013, Ulisses, VladislavAKh
+function getTimeUnitLength(bits) {
+  var minZeroCount = bits.length;
+  var minOneCount  = bits.length;
+  var zeroCount    = bits.length;
+  var oneCount     = bits.length;
+  var lastOne      = false;
+  var lastZero     = false;
+
+  for(var i in bits) {
+    var bit = bits[i];
+    if(bit === '1') {
+      if(lastOne) {
+        oneCount++;
+      } else {
+        lastOne = true;
+        oneCount = 1;
+        if(zeroCount < minZeroCount) {
+          minZeroCount = zeroCount;
+        }
+      }
+      lastZero = false;
+    }
+    if(bit === '0') {
+      if(lastZero) {
+        zeroCount++;
+      } else {
+        lastZero = true;
+        zeroCount = 1;
+        if(oneCount < minOneCount) {
+          minOneCount = oneCount;
+        }
+      }
+      lastOne = false;
+    }
+  }
+
+  return Math.min(minZeroCount, minOneCount);
+}
+
+function nTimesChar(n, ch){
+  var res = "";
+  for(var i=1; i<=n; i++) {
+    res += ch;
+  }
+  return res;
+}
+
+function re(len, ch) {
+  return new RegExp(nTimesChar(len, ch), 'g');
+}
+
+function decodeBits (bits){
+    bits = bits.replace(/^(0+)/, '');
+    bits = bits.replace(/(0+)$/, '');
+
+    var tuLen  = getTimeUnitLength(bits);
+    var dot    = re(1*tuLen, '1');
+    var dash   = re(3*tuLen, '1');
+    var pause1 = re(1*tuLen, '0');
+    var pause2 = re(3*tuLen, '0');
+    var pause3 = re(7*tuLen, '0');
+
+
+    return bits.replace(dash, '-').replace(dot, '.').replace(pause3, '   ').replace(pause2, ' ').replace(pause1, '');
+}
+
+function decodeWord(word) {
+  return word.split(' ').reduce(function(prev, ch){
+    return prev + MORSE_CODE[ch];
+  }, '');
+}
+
+function decodeMorse(morseCode){
+  morseCode = morseCode.trim();
+  return morseCode.split('   ').reduce(function(prev, word){
+    var decoded = decodeWord(word);
+    if(prev.length === 0){
+      return decoded;
+    } else {
+      return prev + ' ' + decoded;
+    }
+  }, '');
+}
+1 similar code variation is grouped with this one
+Show Variations
+Best Practices4Clever0
+ 0ForkCompare with your solutionLink
+buttonupbub
+const decodeBits = bits => {
+    bits = /^0*(.*?)0*$/.exec(bits)[1];
+    var re = /0+|1+/g;
+    var T = Math.min(...bits.match(re).map(s => s.length));
+    return bits.replace(re, s => [{1: "", 3: " ", 7: "   "}, {1: ".", 3: "-"}][+s.charAt(0)][s.length/T]);     
+};
+
+const decodeMorse = code => code.split("   ").map(w => w.split(" ").map(c => MORSE_CODE[c]).join("")).join(" ");
+Best Practices2Clever17
+ 3ForkCompare with your solutionLink
+jimmy-ringo
+var decodeBits = function(bits) {
+  bits = bits.replace(/^0+(.+1)0+/, '$1');
+  var timeUnitLength = Math.min.apply(null, bits.match(/0+|1+/g).map(function(el) {
+    return el.length;
+  }));
+  var longSpaces = RegExp(0 + '{' + timeUnitLength * 7 + '}', 'g');
+  var spaces = RegExp(0 + '{' + timeUnitLength * 3 + '}', 'g');
+  var dashes = RegExp(1 + '{' + timeUnitLength * 3 + '}', 'g');
+  var dots = RegExp(1 + '{' + timeUnitLength + '}', 'g');
+
+  return bits.replace(longSpaces, '   ').replace(spaces, ' ').replace(dashes, '-').replace(dots, '.').replace(/[01]/g, '');
+}
+
+var decodeMorse = function(morseCode) {
+  return morseCode.split('   ').map(function(word) {
+    return word.split(' ').map(function(char) {
+      return MORSE_CODE[char];
+    }).join('');
+  }).join(' ').trim();
+}
